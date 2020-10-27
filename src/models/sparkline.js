@@ -24,6 +24,7 @@ nv.models.sparkline = function() {
         , showMinMaxPoints = true
         , showCurrentPoint = true
         , showFirstPoint = false
+        , showStatusChange = false
         , dispatch = d3.dispatch('renderEnd')
         ;
 
@@ -112,7 +113,26 @@ nv.models.sparkline = function() {
                         currentPoint = pointIndex(yValues.length - 1),
                         firstPoint = pointIndex(0);
 
-                    return [(showFirstPoint ? firstPoint : null), (showMinMaxPoints ? minPoint : null), (showMinMaxPoints ? maxPoint : null), (showCurrentPoint ? currentPoint : null)].filter(function (d) {return d != null;});
+                    var additionalPoints = [];
+                    if (showStatusChange) {
+                        var lastStatus = undefined;
+                        for(var i = 0; i < data.length; i++) {
+                            var point = data[i];
+                            var status = getStatus(point, i);
+                            // the firstPoint shouldn't be flagged through this.
+                            if (status !== lastStatus && i > 2) {
+                                additionalPoints.push(pointIndex(i - 1));
+                            }
+                            lastStatus = stats;
+                        }
+                    }
+
+                    return [
+                        (showFirstPoint ? firstPoint : null),
+                        (showMinMaxPoints ? minPoint : null),
+                        (showMinMaxPoints ? maxPoint : null),
+                        (showCurrentPoint ? currentPoint : null)
+                    ].concat(additionalPoints).filter(function (d) {return d != null;});
                 });
             points.enter().append('circle');
             points.exit().remove();
@@ -154,6 +174,7 @@ nv.models.sparkline = function() {
         showMinMaxPoints: {get: function(){return showMinMaxPoints;}, set: function(_){showMinMaxPoints=_;}},
         showCurrentPoint: {get: function(){return showCurrentPoint;}, set: function(_){showCurrentPoint=_;}},
         showFirstPoint:   {get: function(){return showFirstPoint;}, set: function(_){showFirstPoint=_;}},
+        showStatusChange: {get: function(){return showStatusChange;}, set: function(_){showStatusChange=_;}},
 
         //functor options
         x: {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
