@@ -23,7 +23,6 @@ nv.models.sparkline = function() {
         , yRange
         , showMinMaxPoints = true
         , showCurrentPoint = true
-        , showFirstPoint = false
         , dispatch = d3.dispatch('renderEnd')
         ;
 
@@ -109,10 +108,8 @@ nv.models.sparkline = function() {
                     }
                     var maxPoint = pointIndex(yValues.lastIndexOf(y.domain()[1])),
                         minPoint = pointIndex(yValues.indexOf(y.domain()[0])),
-                        currentPoint = pointIndex(yValues.length - 1),
-                        firstPoint = pointIndex(0);
-
-                    return [(showFirstPoint ? firstPoint : null), (showMinMaxPoints ? minPoint : null), (showMinMaxPoints ? maxPoint : null), (showCurrentPoint ? currentPoint : null)].filter(function (d) {return d != null;});
+                        currentPoint = pointIndex(yValues.length - 1);
+                    return [(showMinMaxPoints ? minPoint : null), (showMinMaxPoints ? maxPoint : null), (showCurrentPoint ? currentPoint : null)].filter(function (d) {return d != null;});
                 });
             points.enter().append('circle');
             points.exit().remove();
@@ -121,12 +118,8 @@ nv.models.sparkline = function() {
                 .attr('cy', function(d,i) { return y(getY(d,d.pointIndex)) })
                 .attr('r', 2)
                 .attr('class', function(d,i) {
-                    var currentY = getY(d, d.pointIndex);
-                    var yDomain = y.domain();
                     return getX(d, d.pointIndex) == x.domain()[1] ? 'nv-point nv-currentValue' :
-                            currentY == yDomain[0] ? 'nv-point nv-minValue' :
-                            currentY == yDomain[1] ? 'nv-point nv-maxValue' :
-                            'nv-point';
+                            getY(d, d.pointIndex) == y.domain()[0] ? 'nv-point nv-minValue' : 'nv-point nv-maxValue'
                 });
         });
 
@@ -153,7 +146,6 @@ nv.models.sparkline = function() {
         animate:          {get: function(){return animate;}, set: function(_){animate=_;}},
         showMinMaxPoints: {get: function(){return showMinMaxPoints;}, set: function(_){showMinMaxPoints=_;}},
         showCurrentPoint: {get: function(){return showCurrentPoint;}, set: function(_){showCurrentPoint=_;}},
-        showFirstPoint:   {get: function(){return showFirstPoint;}, set: function(_){showFirstPoint=_;}},
 
         //functor options
         x:      {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
