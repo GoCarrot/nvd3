@@ -42,6 +42,7 @@ function d3_rebind(target, source, method) {
     return value === source ? target : value;
   };
 }
+
 // Function bind polyfill
 // Needed ONLY for phantomJS as it's missing until version 2.0 which is unreleased as of this comment
 // https://github.com/ariya/phantomjs/issues/10522
