@@ -20,6 +20,7 @@ nv.models.sparklinePlus = function() {
     , alignValue = true
     , rightAlignValue = false
     , noData = "No Data Available."
+    , interactive = true
     ;
 
   //============================================================
@@ -34,7 +35,7 @@ nv.models.sparklinePlus = function() {
           availableHeight = (height || parseInt(container.style('height')) || 400)
                              - margin.top - margin.bottom;
 
-      
+
 
       chart.update = function() { chart(selection) };
       chart.container = this;
@@ -109,7 +110,7 @@ nv.models.sparklinePlus = function() {
 
 
       var valueWrap = g.select('.nv-valueWrap');
-      
+
       var value = valueWrap.selectAll('.nv-currentValue')
           .data([currentValue]);
 
@@ -125,12 +126,13 @@ nv.models.sparklinePlus = function() {
           .text(yTickFormat(currentValue));
 
 
-
-      gEnter.select('.nv-hoverArea').append('rect')
-          .on('mousemove', sparklineHover)
-          .on('click', function() { paused = !paused })
-          .on('mouseout', function() { index = []; updateValueLine(); });
-          //.on('mouseout', function() { index = null; updateValueLine(); });
+      if (interactive) {
+        gEnter.select('.nv-hoverArea').append('rect')
+            .on('mousemove', sparklineHover)
+            .on('click', function() { paused = !paused })
+            .on('mouseout', function() { index = []; updateValueLine(); });
+            //.on('mouseout', function() { index = null; updateValueLine(); });
+      }
 
       g.select('.nv-hoverArea rect')
           .attr('transform', function(d) { return 'translate(' + -margin.left + ',' + -margin.top + ')' })
@@ -230,7 +232,7 @@ nv.models.sparklinePlus = function() {
   d3.rebind(chart, sparkline, 'x', 'y', 'xScale', 'yScale', 'color');
 
   chart.options = nv.utils.optionsFunc.bind(chart);
-  
+
   chart.margin = function(_) {
     if (!arguments.length) return margin;
     margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
@@ -287,6 +289,12 @@ nv.models.sparklinePlus = function() {
     noData = _;
     return chart;
   };
+
+  chart.interactive = function(_) {
+    if (!arguments.length) return interactive;
+    interactive = _;
+    return chart;
+  }
 
   //============================================================
 
