@@ -16791,8 +16791,8 @@ nv.models.sparkline = function() {
         , height = 32
         , container = null
         , animate = true
-        , x = d3.scale.linear()
-        , y = d3.scale.linear()
+        , x = d3.scaleLinear()
+        , y = d3.scaleLinear()
         , getStatus = function(d) { return d.status }
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
@@ -18246,7 +18246,7 @@ nv.models.sunburst = function() {
     // aux functions and setup
     //------------------------------------------------------------
 
-    var x = d3.scale.linear().range([0, 2 * Math.PI]);
+    var x = d3.scaleLinear().range([0, 2 * Math.PI]);
     var y = d3.scale.sqrt();
 
     var partition = d3.layout.partition().sort(sort);
