@@ -5812,7 +5812,7 @@ nv.models.distroPlot = function() {
                         // line
                         distroplots.selectAll('.nv-distribution-line.nv-distribution-' + side)
                           //.watchTransition(renderWatch, 'nv-distribution-line: distroplots') // disable transition for now because it's jaring
-                            .attr("d", d3.svg.line()
+                            .attr("d", d3.line()
                                     .x(function(e) { return plotType=='box' ? e.y : yScale(e.x); })
                                     .y(function(e) { return plotType=='box' ? e.x : tmpScale(e.y) })
                                     .interpolate(interp)
@@ -13611,7 +13611,7 @@ nv.models.parallelCoordinates = function() {
         , foreground
         , background
         , dimensions
-        , line = d3.svg.line()
+        , line = d3.line()
         , axis = d3.svg.axis()
         , dispatch = d3.dispatch('brushstart', 'brush', 'brushEnd', 'dimensionsOrder', "stateChange", 'elementClick', 'elementMouseover', 'elementMouseout', 'elementMousemove', 'renderEnd', 'activeChanged')
         ;
@@ -16874,7 +16874,7 @@ nv.models.sparkline = function() {
             paths.exit().remove();
             paths
                 .style('stroke', function(d,i) { return d.color || color(d, i) })
-                .attr('d', d3.svg.line()
+                .attr('d', d3.line()
                     .x(function(d,i) { return x(getX(d,i)) })
                     .y(function(d,i) { return y(getY(d,i)) }))
                 .attr('class', function(d,i) {
