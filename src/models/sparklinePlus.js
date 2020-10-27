@@ -22,9 +22,8 @@ nv.models.sparklinePlus = function() {
         , rightAlignValue = false
         , noData = null
         , dispatch = d3.dispatch('renderEnd')
-        , interactive = true
         ;
-
+        
     //============================================================
     // Private Variables
     //------------------------------------------------------------
@@ -95,12 +94,10 @@ nv.models.sparklinePlus = function() {
                     .text(yTickFormat(currentValue));
             }
 
-            if (interactive) {
-                gEnter.select('.nv-hoverArea').append('rect')
-                    .on('mousemove', sparklineHover)
-                    .on('click', function() { paused = !paused })
-                    .on('mouseout', function() { index = []; updateValueLine(); });
-            }
+            gEnter.select('.nv-hoverArea').append('rect')
+                .on('mousemove', sparklineHover)
+                .on('click', function() { paused = !paused })
+                .on('mouseout', function() { index = []; updateValueLine(); });
 
             g.select('.nv-hoverArea rect')
                 .attr('transform', function(d) { return 'translate(' + -margin.left + ',' + -margin.top + ')' })
@@ -203,7 +200,6 @@ nv.models.sparklinePlus = function() {
         alignValue:      {get: function(){return alignValue;}, set: function(_){alignValue=_;}},
         rightAlignValue: {get: function(){return rightAlignValue;}, set: function(_){rightAlignValue=_;}},
         noData:          {get: function(){return noData;}, set: function(_){noData=_;}},
-        interactive:     {get: function(){return interactive;}, set: function(_){interactive=_;}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){
