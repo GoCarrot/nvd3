@@ -617,7 +617,7 @@ nv.models.distroPlot = function() {
                         // line
                         distroplots.selectAll('.nv-distribution-line.nv-distribution-' + side)
                           //.watchTransition(renderWatch, 'nv-distribution-line: distroplots') // disable transition for now because it's jaring
-                            .attr("d", d3.svg.line()
+                            .attr("d", d3.line()
                                     .x(function(e) { return plotType=='box' ? e.y : yScale(e.x); })
                                     .y(function(e) { return plotType=='box' ? e.x : tmpScale(e.y) })
                                     .interpolate(interp)
