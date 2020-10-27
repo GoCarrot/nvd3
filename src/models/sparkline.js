@@ -121,9 +121,8 @@ nv.models.sparkline = function() {
         showCurrentPoint: {get: function(){return showCurrentPoint;}, set: function(_){showCurrentPoint=_;}},
 
         //functor options
-        x:      {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
-        y:      {get: function(){return getY;}, set: function(_){getY=d3.functor(_);}},
-        status: {get: function(){return getStatus;}, set: function(_){getStatus=d3.functor(_);}},
+        x: {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
+        y: {get: function(){return getY;}, set: function(_){getY=d3.functor(_);}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){
