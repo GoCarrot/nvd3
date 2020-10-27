@@ -13,7 +13,6 @@ nv.models.sparkline = function() {
         , animate = true
         , x = d3.scaleLinear()
         , y = d3.scaleLinear()
-        , getStatus = function(d) { return d.status }
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , color = nv.utils.getColor(['#000'])
@@ -57,41 +56,15 @@ nv.models.sparkline = function() {
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
             var paths = wrap.selectAll('path')
-                .data(function(d) {
-                    var lastStatus = undefined;
-                    var ret = [];
-                    var currentSet = [];
-                    for(var i = 0; i < d.length; i++) {
-                        var point = d[i];
-                        var status = getStatus(point, i);
-                        if (status !== lastStatus) {
-                            if (currentSet.length > 0) {
-                                ret.push(currentSet);
-                                currentSet = [d[i - 1]];
-                            }
-                        }
-                        currentSet.push(point);
-                        lastStatus = status;
-                    }
-                    if (currentSet.length > 0) {
-                        ret.push(currentSet);
-                    }
-                    return ret;
-                });
+                .data(function(d) { return [d] });
             paths.enter().append('path');
             paths.exit().remove();
             paths
                 .style('stroke', function(d,i) { return d.color || color(d, i) })
                 .attr('d', d3.line()
                     .x(function(d,i) { return x(getX(d,i)) })
-                    .y(function(d,i) { return y(getY(d,i)) }))
-                .attr('class', function(d,i) {
-                    var flags = getStatus(d[d.length - 1], i);
-                    if (flags) {
-                        return 'nv-custom-status-' + flags;
-                    } else {
-                        return "";
-                    }});
+                    .y(function(d,i) { return y(getY(d,i)) })
+            );
 
             // TODO: Add CURRENT data point (Need Min, Mac, Current / Most recent)
             var points = wrap.selectAll('circle.nv-point')
