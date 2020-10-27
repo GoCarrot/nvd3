@@ -17,7 +17,7 @@ nv.models.distroPlot = function() {
         height = 500,
         id = Math.floor(Math.random() * 10000), // Create semi-unique ID in case user doesn't select one
         xScale = d3.scale.ordinal(),
-        yScale = d3.scale.linear(),
+        yScale = d3.scaleLinear(),
         getX  = function(d) { return d.label }, // Default data model selectors.
         getY  = function(d) { return d.value },
         getColor = function(d) { return d.color },
@@ -245,7 +245,7 @@ nv.models.distroPlot = function() {
 
 
             // make a new vertical scale for each group
-            var tmpScale = d3.scale.linear()
+            var tmpScale = d3.scaleLinear()
                 .domain([0, d3.max(kdeDat, function (e) { return e.y;})])
                 .clamp(true);
             yVScale.push(tmpScale);
@@ -776,7 +776,7 @@ nv.models.distroPlot = function() {
                     .attr('cy', function(d) { return yScale(d.datum); })
                     .attr('r', pointSize);
 
-                // NOTE: this update can be slow when re-sizing window when many point visible 
+                // NOTE: this update can be slow when re-sizing window when many point visible
                 // TODO: filter selection down to only visible points, no need to update x-position
                 //       of the hidden points
                 distroplots.selectAll('g.nv-distroplot-observation circle')
