@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2018-07-01 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-10-27 */
 (function(){
 
 // set up main nv object
@@ -15945,7 +15945,11 @@ nv.models.scatter = function() {
 
                     // delete duplicates from vertices - essential assumption for d3.geom.voronoi
                     var epsilon = 1e-4; // Uses 1e-4 to determine equivalence.
-                    vertices = vertices.sort(function(a,b){return ((a[0] - b[0]) || (a[1] - b[1]))});
+                    vertices = vertices.sort(function(a,b){
+                      return Math.abs(a[0] - b[0]) >= epsilon ? 
+                      a[0] - b[0] : 
+                      a[1] - b[1];
+                    });
                     for (var i = 0; i < vertices.length - 1; ) {
                         if ((Math.abs(vertices[i][0] - vertices[i+1][0]) < epsilon) &&
                         (Math.abs(vertices[i][1] - vertices[i+1][1]) < epsilon)) {
@@ -16789,6 +16793,7 @@ nv.models.sparkline = function() {
         , animate = true
         , x = d3.scale.linear()
         , y = d3.scale.linear()
+        , getStatus = function(d) { return d.status }
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , color = nv.utils.getColor(['#000'])
@@ -16798,6 +16803,8 @@ nv.models.sparkline = function() {
         , yRange
         , showMinMaxPoints = true
         , showCurrentPoint = true
+        , showFirstPoint = false
+        , showStatusChange = false
         , dispatch = d3.dispatch('renderEnd')
         ;
 
@@ -16806,7 +16813,7 @@ nv.models.sparkline = function() {
     //------------------------------------------------------------
 
     var renderWatch = nv.utils.renderWatch(dispatch);
-    
+
     function chart(selection) {
         renderWatch.reset();
         selection.each(function(data) {
@@ -16832,15 +16839,41 @@ nv.models.sparkline = function() {
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
             var paths = wrap.selectAll('path')
-                .data(function(d) { return [d] });
+                .data(function(d) {
+                    var lastStatus = undefined;
+                    var ret = [];
+                    var currentSet = [];
+                    for(var i = 0; i < d.length; i++) {
+                        var point = d[i];
+                        var status = getStatus(point, i);
+                        if (status !== lastStatus) {
+                            if (currentSet.length > 0) {
+                                ret.push(currentSet);
+                                currentSet = [d[i - 1]];
+                            }
+                        }
+                        currentSet.push(point);
+                        lastStatus = status;
+                    }
+                    if (currentSet.length > 0) {
+                        ret.push(currentSet);
+                    }
+                    return ret;
+                });
             paths.enter().append('path');
             paths.exit().remove();
             paths
                 .style('stroke', function(d,i) { return d.color || color(d, i) })
                 .attr('d', d3.svg.line()
                     .x(function(d,i) { return x(getX(d,i)) })
-                    .y(function(d,i) { return y(getY(d,i)) })
-            );
+                    .y(function(d,i) { return y(getY(d,i)) }))
+                .attr('class', function(d,i) {
+                    var flags = getStatus(d[d.length - 1], i);
+                    if (flags) {
+                        return 'nv-custom-status-' + flags;
+                    } else {
+                        return "";
+                    }});
 
             // TODO: Add CURRENT data point (Need Min, Mac, Current / Most recent)
             var points = wrap.selectAll('circle.nv-point')
@@ -16857,8 +16890,29 @@ nv.models.sparkline = function() {
                     }
                     var maxPoint = pointIndex(yValues.lastIndexOf(y.domain()[1])),
                         minPoint = pointIndex(yValues.indexOf(y.domain()[0])),
-                        currentPoint = pointIndex(yValues.length - 1);
-                    return [(showMinMaxPoints ? minPoint : null), (showMinMaxPoints ? maxPoint : null), (showCurrentPoint ? currentPoint : null)].filter(function (d) {return d != null;});
+                        currentPoint = pointIndex(yValues.length - 1),
+                        firstPoint = pointIndex(0);
+
+                    var additionalPoints = [];
+                    if (showStatusChange) {
+                        var lastStatus = undefined;
+                        for(var i = 0; i < data.length; i++) {
+                            var point = data[i];
+                            var status = getStatus(point, i);
+                            // the firstPoint shouldn't be flagged through this.
+                            if (status !== lastStatus && i > 2) {
+                                additionalPoints.push(pointIndex(i - 1));
+                            }
+                            lastStatus = stats;
+                        }
+                    }
+
+                    return [
+                        (showFirstPoint ? firstPoint : null),
+                        (showMinMaxPoints ? minPoint : null),
+                        (showMinMaxPoints ? maxPoint : null),
+                        (showCurrentPoint ? currentPoint : null)
+                    ].concat(additionalPoints).filter(function (d) {return d != null;});
                 });
             points.enter().append('circle');
             points.exit().remove();
@@ -16867,11 +16921,15 @@ nv.models.sparkline = function() {
                 .attr('cy', function(d,i) { return y(getY(d,d.pointIndex)) })
                 .attr('r', 2)
                 .attr('class', function(d,i) {
+                    var currentY = getY(d, d.pointIndex);
+                    var yDomain = y.domain();
                     return getX(d, d.pointIndex) == x.domain()[1] ? 'nv-point nv-currentValue' :
-                            getY(d, d.pointIndex) == y.domain()[0] ? 'nv-point nv-minValue' : 'nv-point nv-maxValue'
+                            currentY == yDomain[0] ? 'nv-point nv-minValue' :
+                            currentY == yDomain[1] ? 'nv-point nv-maxValue' :
+                            'nv-point';
                 });
         });
-        
+
         renderWatch.renderEnd('sparkline immediate');
         return chart;
     }
@@ -16895,6 +16953,8 @@ nv.models.sparkline = function() {
         animate:          {get: function(){return animate;}, set: function(_){animate=_;}},
         showMinMaxPoints: {get: function(){return showMinMaxPoints;}, set: function(_){showMinMaxPoints=_;}},
         showCurrentPoint: {get: function(){return showCurrentPoint;}, set: function(_){showCurrentPoint=_;}},
+        showFirstPoint:   {get: function(){return showFirstPoint;}, set: function(_){showFirstPoint=_;}},
+        showStatusChange: {get: function(){return showStatusChange;}, set: function(_){showStatusChange=_;}},
 
         //functor options
         x: {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
@@ -16940,8 +17000,9 @@ nv.models.sparklinePlus = function() {
         , rightAlignValue = false
         , noData = null
         , dispatch = d3.dispatch('renderEnd')
+        , interactive = true
         ;
-        
+
     //============================================================
     // Private Variables
     //------------------------------------------------------------
@@ -17012,10 +17073,12 @@ nv.models.sparklinePlus = function() {
                     .text(yTickFormat(currentValue));
             }
 
-            gEnter.select('.nv-hoverArea').append('rect')
-                .on('mousemove', sparklineHover)
-                .on('click', function() { paused = !paused })
-                .on('mouseout', function() { index = []; updateValueLine(); });
+            if (interactive) {
+                gEnter.select('.nv-hoverArea').append('rect')
+                    .on('mousemove', sparklineHover)
+                    .on('click', function() { paused = !paused })
+                    .on('mouseout', function() { index = []; updateValueLine(); });
+            }
 
             g.select('.nv-hoverArea rect')
                 .attr('transform', function(d) { return 'translate(' + -margin.left + ',' + -margin.top + ')' })
@@ -17118,6 +17181,7 @@ nv.models.sparklinePlus = function() {
         alignValue:      {get: function(){return alignValue;}, set: function(_){alignValue=_;}},
         rightAlignValue: {get: function(){return rightAlignValue;}, set: function(_){rightAlignValue=_;}},
         noData:          {get: function(){return noData;}, set: function(_){noData=_;}},
+        interactive:     {get: function(){return interactive;}, set: function(_){interactive=_;}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){
@@ -17436,7 +17500,7 @@ nv.models.stackedArea = function() {
                     chart.offset('wiggle');
                     chart.order('inside-out');
                     break;
-                case 'stream-center':
+                case 'stream_center':
                     chart.offset('silhouette');
                     chart.order('inside-out');
                     break;
@@ -17675,7 +17739,7 @@ nv.models.stackedAreaChart = function() {
                         key: controlLabels.stream_center || 'Stream Center',
                         metaKey: 'Stream_Center',
                         disabled: stacked.style() != 'stream_center',
-                        style: 'stream-center'
+                        style: 'stream_center'
                     },
                     {
                         key: controlLabels.expanded || 'Expanded',
