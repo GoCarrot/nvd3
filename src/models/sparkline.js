@@ -13,6 +13,7 @@ nv.models.sparkline = function() {
         , animate = true
         , x = d3.scale.linear()
         , y = d3.scale.linear()
+        , getStatus = function(d) { return d.status }
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , color = nv.utils.getColor(['#000'])
@@ -30,7 +31,7 @@ nv.models.sparkline = function() {
     //------------------------------------------------------------
 
     var renderWatch = nv.utils.renderWatch(dispatch);
-    
+
     function chart(selection) {
         renderWatch.reset();
         selection.each(function(data) {
@@ -56,15 +57,41 @@ nv.models.sparkline = function() {
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
             var paths = wrap.selectAll('path')
-                .data(function(d) { return [d] });
+                .data(function(d) {
+                    var lastStatus = undefined;
+                    var ret = [];
+                    var currentSet = [];
+                    for(var i = 0; i < d.length; i++) {
+                        var point = d[i];
+                        var status = getStatus(point, i);
+                        if (status !== lastStatus) {
+                            if (currentSet.length > 0) {
+                                ret.push(currentSet);
+                                currentSet = [d[i - 1]];
+                            }
+                        }
+                        currentSet.push(point);
+                        lastStatus = status;
+                    }
+                    if (currentSet.length > 0) {
+                        ret.push(currentSet);
+                    }
+                    return ret;
+                });
             paths.enter().append('path');
             paths.exit().remove();
             paths
                 .style('stroke', function(d,i) { return d.color || color(d, i) })
                 .attr('d', d3.svg.line()
                     .x(function(d,i) { return x(getX(d,i)) })
-                    .y(function(d,i) { return y(getY(d,i)) })
-            );
+                    .y(function(d,i) { return y(getY(d,i)) }))
+                .attr('class', function(d,i) {
+                    var flags = getStatus(d[d.length - 1], i);
+                    if (flags) {
+                        return 'nv-custom-status-' + flags;
+                    } else {
+                        return "";
+                    }});
 
             // TODO: Add CURRENT data point (Need Min, Mac, Current / Most recent)
             var points = wrap.selectAll('circle.nv-point')
@@ -95,7 +122,7 @@ nv.models.sparkline = function() {
                             getY(d, d.pointIndex) == y.domain()[0] ? 'nv-point nv-minValue' : 'nv-point nv-maxValue'
                 });
         });
-        
+
         renderWatch.renderEnd('sparkline immediate');
         return chart;
     }
