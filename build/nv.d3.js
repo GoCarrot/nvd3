@@ -13891,7 +13891,7 @@ nv.models.sparkline = function() {
                             if (status !== lastStatus && i > 2) {
                                 additionalPoints.push(pointIndex(i - 1));
                             }
-                            lastStatus = stats;
+                            lastStatus = status;
                         }
                     }
 
