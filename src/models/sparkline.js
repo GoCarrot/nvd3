@@ -142,8 +142,11 @@ nv.models.sparkline = function() {
                 .attr('r', 2)
                 .attr('class', function(d,i) {
                     var currentY = getY(d, d.pointIndex);
+                    var currentX = getX(d, d.pointIndex);
                     var yDomain = y.domain();
-                    return getX(d, d.pointIndex) == x.domain()[1] ? 'nv-point nv-currentValue' :
+                    var xDomain = x.domain();
+                    return currentX == xDomain[1] ? 'nv-point nv-currentValue' :
+                            currentX == xDomain[0] ? 'nv-point nv-firstValue' :
                             currentY == yDomain[0] ? 'nv-point nv-minValue' :
                             currentY == yDomain[1] ? 'nv-point nv-maxValue' :
                             'nv-point';
